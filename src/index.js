@@ -86,13 +86,17 @@ app.delete('/users/:id', async (req, res) => {
     if (!_id.match(/^[0-9a-fA-F]{24}$/)) {
         return res.status(400).send(`${_id} is not a valid user_id`)  
       }
-
-    const user = await User.findByIdAndDelete(_id)
-
-    if(!user) {
-        return res.status(404).send('User not found!')
+    
+    try {
+        const user = await User.findByIdAndDelete(_id)
+    
+        if(!user) {
+            return res.status(404).send('User not found!')
+        }
+        res.send(user)
+    } catch (err) {
+        res.status(500).send(err)
     }
-    res.send(user)
 })
 
 app.post('/tasks', async (req, res) => {
@@ -167,12 +171,16 @@ app.delete('/tasks/:id', async (req, res) => {
         return res.status(400).send(`${_id} is not a valid task_id`)  
       }
 
-    const task = await Task.findByIdAndDelete(_id)
-
-    if(!task) {
-        return res.status(404).send('Task not found!')
+    try {
+        const task = await Task.findByIdAndDelete(_id)
+    
+        if(!task) {
+            return res.status(404).send('Task not found!')
+        }
+        res.send(task)
+    } catch (err) {
+        res.status(500).send(err)
     }
-    res.send(task)
 })
 
 
