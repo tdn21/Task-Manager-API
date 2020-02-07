@@ -53,6 +53,48 @@ app.get('/users/:id', async (req,res) => {
       }
 })
 
+app.patch('/users/:id', async (req, res) => {
+    try {
+        const _id = req.params.id
+    
+        if (!_id.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).send(`${_id} is not a valid user_id`)  
+          }
+
+        const updates = Object.keys(req.body)
+        const allowedUpdates = ['name', 'email','password','age']
+        const isValidOperatioin = updates.every((update) => allowedUpdates.includes(update))
+
+        if(!isValidOperatioin){
+            return res.status(400).send({ error : 'Invalid Updates'})
+        }
+        
+        const user = await User.findByIdAndUpdate(_id, req.body, {new : true, runValidators : true})
+
+        if(!user) {
+            return res.status(404).send('user not found')
+        }
+        res.send(user)
+    } catch (err) {
+        res.status(400).send(err)
+    }
+})
+
+app.delete('/users/:id', async (req, res) => {
+    const _id = req.params.id
+
+    if (!_id.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(400).send(`${_id} is not a valid user_id`)  
+      }
+
+    const user = await User.findByIdAndDelete(_id)
+
+    if(!user) {
+        return res.status(404).send('User not found!')
+    }
+    res.send(user)
+})
+
 app.post('/tasks', async (req, res) => {
     const task = new Task(req.body)
 
@@ -91,7 +133,48 @@ app.get('/tasks/:id', async (req, res) => {
     }
 })
 
+app.patch('/tasks/:id', async (req, res) => {
+    try {
+        const _id = req.params.id
+    
+        if (!_id.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).send(`${_id} is not a valid task_id`)  
+          }
+
+        const updates = Object.keys(req.body)
+        const allowedUpdates = ['description', 'completed']
+        const isValidOperatioin = updates.every((update) => allowedUpdates.includes(update))
+
+        if(!isValidOperatioin){
+            return res.status(400).send({ error : 'Invalid Updates'})
+        }
+        
+        const task = await Task.findByIdAndUpdate(_id, req.body, {new : true, runValidators : true})
+
+        if(!task) {
+            return res.status(404).send('task not found')
+        }
+        res.send(task)
+    } catch (err) {
+        res.status(400).send(err)
+    }
+})
+
+app.delete('/tasks/:id', async (req, res) => {
+    const _id = req.params.id
+
+    if (!_id.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(400).send(`${_id} is not a valid task_id`)  
+      }
+
+    const task = await Task.findByIdAndDelete(_id)
+
+    if(!task) {
+        return res.status(404).send('Task not found!')
+    }
+    res.send(task)
+})
+
+
 
 app.listen(port, () => console.log(`Server is up at port ${port}!`))
-
-
