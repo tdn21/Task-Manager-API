@@ -9,73 +9,86 @@ const port = process.env.PORT || 3000
 
 app.use(express.json())                                                 //to parse incoming json to an object
 
-app.post('/users', (req,res) => {
+app.post('/users', async (req,res) => {
     const user = new User(req.body)
     
-    user.save().then(() => {
+    try{
+        await user.save()
         res.status(201).send(user)
-    }).catch((err) => {
-        res.status(400).send(err)
-    })
+    } catch (err) {
+        res.send(err)
+    }
+    
+    // Refactored code from the below written promise chaining syntax to above written async await syntax
+    // user.save().then(() => {
+    //     res.status(201).send(user)
+    // }).catch((err) => {
+    //     res.status(400).send(err)
+    // })
 })
 
-app.get('/users', (req, res) => {
-    User.find({}).then((users) => {
+app.get('/users', async (req, res) => {
+    try{
+        const users = await User.find({})
         res.send(users)
-    }).catch((err) => {
+    } catch (err) {
         res.status(500).send(err)
-    })
+    }
 })
 
-app.get('/users/:id', (req,res) => {
+app.get('/users/:id', async (req,res) => {
     const _id = req.params.id
     
     if (!_id.match(/^[0-9a-fA-F]{24}$/)) {
         return res.status(400).send(`${_id} is not a valid user_id`)  
       }
-    User.findById(_id).then((user) => {
-        if(!user){
-            return res.status(404).send('Task not found')
-        }
-        res.send(user)
-    }).catch((err) => {
-        res.status(500).send(err)
-    })
+      try {
+          const user = await User.findById(_id)
+          if(!user){
+              return res.status(404).send('User not found')
+          }
+          res.send(user)
+      } catch (err) {
+          res.status(500).send(err)
+      }
 })
 
-app.post('/tasks', (req, res) => {
+app.post('/tasks', async (req, res) => {
     const task = new Task(req.body)
 
-    task.save().then(() => {
+    try{
+        await task.save()
         res.status(201).send(task)
-    }).catch((err) => {
+    } catch(err) {
         res.status(400).send(err)
-    })
+    }
 })
 
-app.get('/tasks', (req, res) => {
-    Task.find({}).then((tasks) => {
+app.get('/tasks', async (req, res) => {
+    try {
+        const tasks = await Task.find({})
         res.send(tasks)
-    }).catch((err) => {
-        res.status(500).send(err)
-    })
+    } catch (err) {
+        res.send(err)
+    }
 })
 
-app.get('/tasks/:id', (req, res) => {
+app.get('/tasks/:id', async (req, res) => {
     const _id = req.params.id
     
     if (!_id.match(/^[0-9a-fA-F]{24}$/)) {
         return res.status(400).send(`${_id} is not a valid task_id`)  
       }
 
-    Task.findById(_id).then((task) => {
+    try{
+        const task = await Task.findById(_id)
         if(!task){
             return res.status(404).send('Task not found')
         }
         res.send(task)
-    }).catch((err) => {
+    } catch (err) {
         res.status(500).send(err)
-    })
+    }
 })
 
 
