@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const Task = require('./tasks')
 
 const userSchema = mongoose.Schema({
     name :   { 
@@ -50,6 +51,14 @@ const userSchema = mongoose.Schema({
     }]
 })
 
+//Setup virtual field to make mongoose understand relationship between user and tasks collection
+userSchema.virtual('tasks', {
+    ref: 'Task',
+    localField: '_id',
+    foreignField: 'owner'
+})
+
+//generate authentication token
 userSchema.methods.genAuthToken = async function() {
     const user = this
     const token = await jwt.sign({_id : user._id.toString()},"developedByTarun")
@@ -60,6 +69,7 @@ userSchema.methods.genAuthToken = async function() {
     return token
 }
 
+//remove confidential information before sending response
 userSchema.methods.toJSON = function () {
     const user = this 
     const userObject = user.toObject()
@@ -70,6 +80,7 @@ userSchema.methods.toJSON = function () {
     return userObject
 }
 
+//Check if given email and password are valid credentials
 userSchema.statics.findByCredentials = async (email, password) => {
     const user = await User.findOne({ email })
     if(!user){
@@ -91,6 +102,13 @@ userSchema.pre('save', async function (next) {
     if(user.isModified('password')){
         user.password = await bcrypt.hash(user.password, 8)
     }
+    next()
+})
+
+// Delete user tasks when user is removed
+userSchema.pre('remove', async function (next) {
+    const user = this
+    await Task.deleteMany({ author: user._id })
     next()
 })
 
