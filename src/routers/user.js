@@ -1,6 +1,7 @@
 const express = require('express')
 const User = require('../models/user')
 const auth = require('../middlewares/auth')
+const multer = require('multer')
 
 const router = new express.Router()
 
@@ -31,6 +32,53 @@ router.post('/users/login', async(req, res) => {
     }
 })
 
+//Route to fetch user **
+router.get('/users/me', auth , async (req, res) => {
+    res.send(req.user)
+})
+
+//Route to upload profile pic
+const avatar = multer({
+    dest : 'avatar',
+    limits: {
+        fileSize: 1000000
+    },
+    fileFilter(req, file, cb) {
+        if(!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+            return cb(new Error('Please upload an image'))
+        }
+        cb(undefined, true)
+    }
+})
+
+router.post('/users/me/avatar', avatar.single('avatar'), (req, res) => {
+    res.send()
+}, (err, req, res, next) => {
+    res.status(400).send({ error : err.message })
+})
+
+//Route to update user info **
+router.patch('/users/me',auth, async (req, res) => {
+    const updates = Object.keys(req.body)
+    const allowedUpdates = ['name', 'email','password','age']
+    const isValidOperatioin = updates.every((update) => allowedUpdates.includes(update))
+    
+    if(!isValidOperatioin){
+        return res.status(400).send({ error : 'Invalid Updates'})
+    }
+    
+    try {
+        const user = req.user
+
+        updates.forEach((update) => user[update] = req.body[update])                    //user[update] is syntax for dynamically writing user.property as we 
+        await user.save()                                                               //can't use user.property as we explicitly don't know the name of the property which is being updated
+        
+        res.send(user)
+    } catch (err) {
+        res.status(400).send(err)
+    }
+})
+
 //Route to logout user from current session **
 router.post('/users/logout', auth , async (req, res) => {
     try {
@@ -54,33 +102,6 @@ router.post('/users/logoutAll', auth , async (req, res) => {
         res.send('Successfully logged out of all!!')
     } catch (err) {
         res.status(500).send()
-    }
-})
-
-//Route to fetch user **
-router.get('/users/me', auth , async (req, res) => {
-    res.send(req.user)
-})
-
-//Route to update user info **
-router.patch('/users/me',auth, async (req, res) => {
-    const updates = Object.keys(req.body)
-    const allowedUpdates = ['name', 'email','password','age']
-    const isValidOperatioin = updates.every((update) => allowedUpdates.includes(update))
-    
-    if(!isValidOperatioin){
-        return res.status(400).send({ error : 'Invalid Updates'})
-    }
-    
-    try {
-        const user = req.user
-
-        updates.forEach((update) => user[update] = req.body[update])                    //user[update] is syntax for dynamically writing user.property as we 
-        await user.save()                                                               //can't use user.property as we explicitly don't know the name of the property which is being updated
-        
-        res.send(user)
-    } catch (err) {
-        res.status(400).send(err)
     }
 })
 
