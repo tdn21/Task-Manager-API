@@ -39,7 +39,6 @@ router.get('/users/me', auth , async (req, res) => {
 
 //Route to upload profile pic
 const avatar = multer({
-    dest : 'avatar',
     limits: {
         fileSize: 1000000
     },
@@ -51,10 +50,35 @@ const avatar = multer({
     }
 })
 
-router.post('/users/me/avatar', avatar.single('avatar'), (req, res) => {
+router.post('/users/me/avatar', auth, avatar.single('avatar'),async (req, res) => {
+    req.user.avatar = req.file.buffer
+    await req.user.save()
     res.send()
 }, (err, req, res, next) => {
     res.status(400).send({ error : err.message })
+})
+
+//Route to fetch profile pic
+router.get('/users/:id/avatar', async (req, res) => {
+    try{
+        const user = await User.findById(req.params.id)
+
+        if(!user || !user.avatar) {
+            throw new Error()
+        }
+
+        res.set('Content-type','image/jpg')
+        res.send(user.avatar)
+    } catch (err) {
+        res.status(404).send()
+    }
+})
+
+// Route to delete profile pic
+router.delete('/users/me/avatar', auth, async (req, res) => {
+    req.user.avatar = undefined
+    await req.user.save()
+    res.send()
 })
 
 //Route to update user info **
