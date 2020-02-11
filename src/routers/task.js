@@ -23,12 +23,52 @@ router.post('/tasks',auth, async (req, res) => {
 
 //Route to fetch all tasks of the authenticated user
 router.get('/tasks',auth, async (req, res) => {
-    try {
-        const tasks = await Task.find({author : req.user._id})
-        res.send(tasks)
-    } catch (err) {
-        res.send(err)
+    // if(req.query.completed){
+    //     const completed = req.query.completed === "true"
+        
+    //     try {
+    //         const tasks = await Task.find({author : req.user._id, completed})
+    //         res.send(tasks)
+    //     } catch (err) {
+    //         res.send(err)
+    //     }
+    // }
+    // else {
+    //     try {
+    //         const tasks = await Task.find({author : req.user._id})
+    //         res.send(tasks)
+    //     } catch (err) {
+    //         res.send(err)
+    //     }
+    //  }
+
+    const match = {}
+    const sort = {}
+
+    if (req.query.completed) {
+        match.completed = req.query.completed === 'true'
     }
+
+    if (req.query.sortBy) {
+        const parts = req.query.sortBy.split(':')
+        sort[parts[0]] = parts[1] === 'asc' ? 1 : -1
+    }
+
+    try {
+        await req.user.populate({
+            path: 'tasks',
+            match,
+            options: {
+                limit: parseInt(req.query.limit),
+                skip: parseInt(req.query.skip),
+                sort
+            }
+         }).execPopulate()
+        res.send(req.user.tasks)
+    } catch (e) {
+        res.status(500).send()
+    }
+    
 })
 
 //Route to fetch a particular task of authenticated user by its _id

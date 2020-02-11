@@ -49,13 +49,15 @@ const userSchema = mongoose.Schema({
             required : true
         }
     }]
+},{
+    timestamps : true
 })
 
 //Setup virtual field to make mongoose understand relationship between user and tasks collection
 userSchema.virtual('tasks', {
-    ref: 'Task',
+    ref: 'Tasks',
     localField: '_id',
-    foreignField: 'owner'
+    foreignField: 'author'
 })
 
 //generate authentication token
@@ -117,4 +119,3 @@ const User = mongoose.model('User', userSchema)
 
 module.exports = User
 // export default User
-
