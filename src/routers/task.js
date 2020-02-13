@@ -23,25 +23,6 @@ router.post('/tasks',auth, async (req, res) => {
 
 //Route to fetch all tasks of the authenticated user
 router.get('/tasks',auth, async (req, res) => {
-    // if(req.query.completed){
-    //     const completed = req.query.completed === "true"
-        
-    //     try {
-    //         const tasks = await Task.find({author : req.user._id, completed})
-    //         res.send(tasks)
-    //     } catch (err) {
-    //         res.send(err)
-    //     }
-    // }
-    // else {
-    //     try {
-    //         const tasks = await Task.find({author : req.user._id})
-    //         res.send(tasks)
-    //     } catch (err) {
-    //         res.send(err)
-    //     }
-    //  }
-
     const match = {}
     const sort = {}
 
@@ -67,8 +48,7 @@ router.get('/tasks',auth, async (req, res) => {
         res.send(req.user.tasks)
     } catch (e) {
         res.status(500).send()
-    }
-    
+    }   
 })
 
 //Route to fetch a particular task of authenticated user by its _id
